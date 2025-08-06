@@ -1,22 +1,84 @@
-<div id="passwordDiv">
-  <label>పాస్‌వర్డ్ నమోదు చేయండి:</label>
-  <input type="password" id="passwordInput" />
-  <button onclick="checkPassword()">సబ్మిట్</button>
-  <p id="passError" style="color: red"></p>
-</div>
+<!DOCTYPE html>
+<html lang="te">
+  <head>
+    <meta charset="UTF-8" />
+    <title>అడ్మిన్ పేజీ</title>
+  </head>
+  <body>
+    <h2>🔐 అడ్మిన్ పానెల్</h2>
 
-<div id="formDiv" style="display: none">
-  <form id="donationForm">
-    <label>పేరు:</label>
-    <input type="text" id="donorName" required />
-    <label>దానం మొత్తం:</label>
-    <input type="number" id="donationAmount" required />
-    <button type="submit">సబ్మిట్</button>
-  </form>
-  <p id="formMsg" style="color: green"></p>
-</div>
+    <div id="passwordDiv">
+      <label>పాస్‌వర్డ్ నమోదు చేయండి:</label>
+      <input type="password" id="passwordInput" />
+      <button onclick="checkPassword()">సబ్మిట్</button>
+      <p id="passError" style="color: red"></p>
+    </div>
 
-<script src="public_script_Version5.js"></script>
-<script>
-  showAdmin();
-</script>
+    <div id="formDiv" style="display: none">
+      <form id="donationForm">
+        <label>పేరు:</label>
+        <input type="text" id="donorName" required />
+        <label>దానం మొత్తం:</label>
+        <input type="number" id="donationAmount" required />
+        <button type="submit">సబ్మిట్</button>
+      </form>
+      <p id="formMsg" style="color: green"></p>
+
+      <button id="clearBtn">🧹 అన్ని ఎంట్రీలు తొలగించు</button>
+      <p id="clearMsg" style="color: red"></p>
+    </div>
+
+    <script>
+      const ADMIN_PASSWORD = "kogatam2025";
+
+      function checkPassword() {
+        const input = document.getElementById("passwordInput").value;
+        if (input === ADMIN_PASSWORD) {
+          document.getElementById("passwordDiv").style.display = "none";
+          document.getElementById("formDiv").style.display = "block";
+        } else {
+          document.getElementById("passError").innerText = "పాస్‌వర్డ్ తప్పు";
+        }
+      }
+
+      document
+        .getElementById("donationForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const name = document.getElementById("donorName").value;
+          const amount = parseFloat(
+            document.getElementById("donationAmount").value
+          );
+
+          const res = await fetch("/api/donations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, amount, password: ADMIN_PASSWORD }),
+          });
+
+          const data = await res.json();
+          document.getElementById("formMsg").innerText = data.success
+            ? "దానం విజయవంతంగా జోడించబడింది"
+            : data.error;
+        });
+
+      document
+        .getElementById("clearBtn")
+        .addEventListener("click", async () => {
+          const confirmed = confirm("నిజంగా అన్ని ఎంట్రీలు తొలగించాలా?");
+          if (!confirmed) return;
+
+          const res = await fetch("/api/donations", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ password: ADMIN_PASSWORD }),
+          });
+
+          const data = await res.json();
+          document.getElementById("clearMsg").innerText = data.success
+            ? "అన్ని ఎంట్రీలు తొలగించబడ్డాయి"
+            : data.error;
+        });
+    </script>
+  </body>
+</html>

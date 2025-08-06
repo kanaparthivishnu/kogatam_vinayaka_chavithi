@@ -7,15 +7,22 @@ const PORT = process.env.PORT || 3001;
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
+// Serve admin page explicitly
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
 // Initialize database
 const db = new Database("donations.db");
 db.prepare(
-  `CREATE TABLE IF NOT EXISTS donations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  amount REAL NOT NULL,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-)`
+  `
+  CREATE TABLE IF NOT EXISTS donations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    amount REAL NOT NULL,
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  )
+`
 ).run();
 
 // Get all donations (public)
@@ -49,6 +56,21 @@ app.post("/api/donations", (req, res) => {
       amount
     );
     res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Clear all donations (admin, password protected)
+app.delete("/api/donations", (req, res) => {
+  const { password } = req.body;
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(403).json({ error: "పాస్‌వర్డ్ తప్పు" });
+  }
+
+  try {
+    db.prepare("DELETE FROM donations").run();
+    res.json({ success: true, message: "అన్ని ఎంట్రీలు తొలగించబడ్డాయి" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
