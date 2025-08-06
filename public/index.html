@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="te">
+  <head>
+    <meta charset="UTF-8" />
+    <title>2025 Kogatam Vinayaka Chavithi Donations</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f4f6f8;
+        padding: 20px;
+      }
+      h1 {
+        color: #2c3e50;
+        text-align: center;
+      }
+      #summaryBox {
+        background-color: #dff0d8;
+        color: #3c763d;
+        padding: 15px;
+        font-size: 1.2em;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      select {
+        padding: 8px;
+        margin-bottom: 20px;
+        font-size: 1em;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      th,
+      td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+      }
+      th {
+        background-color: #3498db;
+        color: white;
+      }
+      tr:hover {
+        background-color: #f1f1f1;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>2025 Kogatam Vinayaka Chavithi Donations</h1>
+
+    <div id="summaryBox">
+      🏆 టాప్ దాత: <span id="topDonor">---</span><br />
+      💰 మొత్తం దానం: ₹<span id="totalAmount">0</span>
+    </div>
+
+    <label for="dateFilter">📅 తేదీని ఎంచుకోండి:</label>
+    <select id="dateFilter">
+      <option value="">-- అన్ని తేదీలు --</option>
+    </select>
+
+    <table>
+      <thead>
+        <tr>
+          <th>పేరు</th>
+          <th>దానం మొత్తం</th>
+        </tr>
+      </thead>
+      <tbody id="donationsList"></tbody>
+    </table>
+
+    <script>
+      function showDashboard() {
+        async function fetchDonations() {
+          const res = await fetch("/api/donations");
+          return await res.json();
+        }
+
+        async function updateDonations() {
+          const donations = await fetchDonations();
+          let total = 0;
+          let topDonor = "";
+          let topAmount = 0;
+          const dateSet = new Set();
+          const tbody = document.getElementById("donationsList");
+          const dateFilter = document.getElementById("dateFilter");
+          const selectedDate = dateFilter.value;
+
+          tbody.innerHTML = "";
+
+          donations.forEach(({ name, amount, timestamp, created_at }) => {
+            const date = new Date(timestamp || created_at).toLocaleDateString();
+            dateSet.add(date);
+
+            if (!selectedDate || selectedDate === date) {
+              total += amount;
+              if (amount > topAmount) {
+                topAmount = amount;
+                topDonor = name;
+              }
+
+              const row = document.createElement("tr");
+              row.innerHTML = `<td>${name}</td><td>₹${amount}</td>`;
+              tbody.appendChild(row);
+            }
+          });
+
+          document.getElementById("totalAmount").textContent = total;
+          document.getElementById("topDonor").textContent = topDonor || "---";
+
+          // Populate dropdown
+          if (dateFilter.options.length <= 1) {
+            Array.from(dateSet)
+              .sort()
+              .forEach((date) => {
+                const option = document.createElement("option");
+                option.value = date;
+                option.textContent = date;
+                dateFilter.appendChild(option);
+              });
+          }
+        }
+
+        document
+          .getElementById("dateFilter")
+          .addEventListener("change", updateDonations);
+        updateDonations();
+      }
+
+      showDashboard();
+    </script>
+  </body>
+</html>

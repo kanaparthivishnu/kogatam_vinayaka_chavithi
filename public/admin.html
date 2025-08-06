@@ -1,0 +1,22 @@
+<div id="passwordDiv">
+  <label>పాస్‌వర్డ్ నమోదు చేయండి:</label>
+  <input type="password" id="passwordInput" />
+  <button onclick="checkPassword()">సబ్మిట్</button>
+  <p id="passError" style="color: red"></p>
+</div>
+
+<div id="formDiv" style="display: none">
+  <form id="donationForm">
+    <label>పేరు:</label>
+    <input type="text" id="donorName" required />
+    <label>దానం మొత్తం:</label>
+    <input type="number" id="donationAmount" required />
+    <button type="submit">సబ్మిట్</button>
+  </form>
+  <p id="formMsg" style="color: green"></p>
+</div>
+
+<script src="public_script_Version5.js"></script>
+<script>
+  showAdmin();
+</script>
