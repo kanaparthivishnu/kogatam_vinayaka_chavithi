@@ -26,6 +26,9 @@
 
       <button id="clearBtn">🧹 అన్ని ఎంట్రీలు తొలగించు</button>
       <p id="clearMsg" style="color: red"></p>
+
+      <h3>📋 దానాలు</h3>
+      <ul id="donationList"></ul>
     </div>
 
     <script>
@@ -36,6 +39,7 @@
         if (input === ADMIN_PASSWORD) {
           document.getElementById("passwordDiv").style.display = "none";
           document.getElementById("formDiv").style.display = "block";
+          loadDonations();
         } else {
           document.getElementById("passError").innerText = "పాస్‌వర్డ్ తప్పు";
         }
@@ -60,6 +64,8 @@
           document.getElementById("formMsg").innerText = data.success
             ? "దానం విజయవంతంగా జోడించబడింది"
             : data.error;
+
+          loadDonations();
         });
 
       document
@@ -78,7 +84,39 @@
           document.getElementById("clearMsg").innerText = data.success
             ? "అన్ని ఎంట్రీలు తొలగించబడ్డాయి"
             : data.error;
+
+          loadDonations();
         });
+
+      async function loadDonations() {
+        const res = await fetch("/api/donations");
+        const data = await res.json();
+
+        const list = document.getElementById("donationList");
+        list.innerHTML = "";
+
+        data.forEach((donation) => {
+          const li = document.createElement("li");
+          li.innerHTML = `${donation.name} - ₹${donation.amount} 
+          <button onclick="deleteEntry(${donation.id})">తొలగించు</button>`;
+          list.appendChild(li);
+        });
+      }
+
+      async function deleteEntry(id) {
+        const confirmed = confirm("నిజంగా ఈ ఎంట్రీ తొలగించాలా?");
+        if (!confirmed) return;
+
+        const res = await fetch(`/api/donations/${id}`, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: ADMIN_PASSWORD }),
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+        loadDonations();
+      }
     </script>
   </body>
 </html>

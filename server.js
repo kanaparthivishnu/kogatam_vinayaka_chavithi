@@ -30,7 +30,7 @@ app.get("/api/donations", (req, res) => {
   try {
     const rows = db
       .prepare(
-        "SELECT name, amount, created_at as timestamp FROM donations ORDER BY created_at DESC"
+        "SELECT id, name, amount, created_at as timestamp FROM donations ORDER BY created_at DESC"
       )
       .all();
     res.json(rows);
@@ -39,8 +39,9 @@ app.get("/api/donations", (req, res) => {
   }
 });
 
-// Add donation (admin, password protected)
 const ADMIN_PASSWORD = "kogatam2025";
+
+// Add donation (admin only)
 app.post("/api/donations", (req, res) => {
   const { name, amount, password } = req.body;
   if (password !== ADMIN_PASSWORD) {
@@ -61,7 +62,7 @@ app.post("/api/donations", (req, res) => {
   }
 });
 
-// Clear all donations (admin, password protected)
+// Clear all donations (admin only)
 app.delete("/api/donations", (req, res) => {
   const { password } = req.body;
   if (password !== ADMIN_PASSWORD) {
@@ -71,6 +72,29 @@ app.delete("/api/donations", (req, res) => {
   try {
     db.prepare("DELETE FROM donations").run();
     res.json({ success: true, message: "అన్ని ఎంట్రీలు తొలగించబడ్డాయి" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete specific donation by ID (admin only)
+app.delete("/api/donations/:id", (req, res) => {
+  const { password } = req.body;
+  const id = req.params.id;
+
+  if (password !== ADMIN_PASSWORD) {
+    return res.status(403).json({ error: "పాస్‌వర్డ్ తప్పు" });
+  }
+
+  try {
+    const stmt = db.prepare("DELETE FROM donations WHERE id = ?");
+    const result = stmt.run(id);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: "ఎంట్రీ కనబడలేదు" });
+    }
+
+    res.json({ success: true, message: "ఎంట్రీ తొలగించబడింది" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
